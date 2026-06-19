@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: low-rate-insurance
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Owner login. Change these in the Render dashboard to override the defaults.
+      - key: OWNER_USERNAME
+        sync: false
+      - key: OWNER_PASSWORD
+        sync: false
