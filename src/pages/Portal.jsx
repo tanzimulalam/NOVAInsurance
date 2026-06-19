@@ -123,7 +123,7 @@ const Portal = () => {
     <div className="portal-layout">
       <header className="portal-header">
         <div className="portal-header-brand">
-          <img src="/icon.png" alt="Low Rate Insurance" />
+          <img src={`${import.meta.env.BASE_URL}icon.png`} alt="Low Rate Insurance" />
           <div>
           <h1>Low Rate Insurance Management Portal</h1>
           <p>Welcome, {user?.username} &nbsp;·&nbsp;

@@ -119,7 +119,7 @@ const Home = () => {
               </div>
             </div>
             <div className="about-logo-wrap">
-              <img src="/logo.png" alt="Low Rate Insurance" />
+              <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Low Rate Insurance" />
             </div>
           </Reveal>
         </section>

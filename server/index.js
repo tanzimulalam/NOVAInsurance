@@ -11,7 +11,7 @@ const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
 
 const PORT = process.env.PORT || 3001;
 const OWNER_USERNAME = process.env.OWNER_USERNAME || 'bakirbd';
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'bakirbd2001';
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'F123456f';
 
 const app = express();
 const sseClients = new Set();

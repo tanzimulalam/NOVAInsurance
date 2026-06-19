@@ -35,7 +35,7 @@ const Login = () => {
     <div className="login-page">
       <div className="glass-panel login-card fade-in-up">
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <img src="/icon.png" alt="Low Rate Insurance" style={{ height: '64px' }} />
+          <img src={`${import.meta.env.BASE_URL}icon.png`} alt="Low Rate Insurance" style={{ height: '64px' }} />
         </div>
         <h2>Management Portal</h2>
         <p className="subtitle">Low Rate Insurance Management Portal</p>

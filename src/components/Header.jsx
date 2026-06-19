@@ -15,7 +15,7 @@ const Header = () => {
   return (
     <header className={`glass-panel site-header${scrolled ? ' scrolled' : ''}`}>
       <Link to="/" className="header-brand">
-        <img src="/logo.png" alt="Low Rate Insurance, Protection at the Best Price" />
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Low Rate Insurance, Protection at the Best Price" />
       </Link>
 
       <div className="header-contact">
