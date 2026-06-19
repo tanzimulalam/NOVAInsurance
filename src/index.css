@@ -401,7 +401,7 @@ button, input, select, textarea {
 /* ── Stats ── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
@@ -963,7 +963,7 @@ button, input, select, textarea {
 }
 
 @media (max-width: 600px) {
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr; }
   .hero { padding: 48px 0 64px; }
   .login-corner { bottom: 16px; right: 16px; }
 }

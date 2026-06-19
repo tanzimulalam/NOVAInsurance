@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Car, Home as HomeIcon, Building2, Shield, Briefcase,
-  ArrowRight, Award, Clock, Users, ThumbsUp, Headphones, BadgeCheck, Sparkles
+  ArrowRight, Award, Clock, ThumbsUp, Headphones, BadgeCheck, Sparkles
 } from 'lucide-react';
 import Reveal from '../components/Reveal';
 
@@ -25,10 +25,9 @@ const slogans = [
 ];
 
 const stats = [
-  { value: '500+', label: 'Happy Clients' },
-  { value: '15+', label: 'Years Experience' },
-  { value: '7', label: 'Insurance Types' },
-  { value: '24hr', label: 'Response Time' },
+  { value: '100+', label: 'Happy Clients' },
+  { value: 'DC, MD, VA', label: 'Serving DC, Maryland, Virginia' },
+  { value: '24h', label: 'Response Time' },
 ];
 
 const whyUs = [
@@ -113,9 +112,6 @@ const Home = () => {
               <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: 'var(--green-100)', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--green-700)' }}>
                   <BadgeCheck size={16} /> Licensed Agent
-                </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: 'var(--blue-100)', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--blue-700)' }}>
-                  <Users size={16} /> Family Owned
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: 'var(--blue-100)', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--blue-700)' }}>
                   <Clock size={16} /> Fast Quotes
