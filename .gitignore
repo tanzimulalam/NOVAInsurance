@@ -25,3 +25,7 @@ dist-ssr
 
 # Runtime lead data
 server/data/leads.json
+
+# Local environment variables (Supabase keys)
+.env
+.env.local

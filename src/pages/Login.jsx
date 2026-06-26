@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, loading: authLoading } = useAuth();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,10 +22,10 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      await login(username, password);
+      await login(email, password);
       navigate('/portal');
     } catch {
-      setError('Invalid username or password. Please try again.');
+      setError('Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -44,15 +44,15 @@ const Login = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Username</label>
+            <label className="form-label">Email</label>
             <input
-              type="text"
+              type="email"
               className="form-control"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="username"
-              placeholder="Enter your username"
+              placeholder="you@email.com"
             />
           </div>
           <div className="form-group">

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail, LogIn } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -27,6 +29,14 @@ const Header = () => {
           <Mail size={15} />
           md.ahmed@lowrateprotection.com
         </a>
+        <Link
+          to={isAuthenticated ? '/portal' : '/login'}
+          className="btn btn-outline btn-sm header-login"
+          title={isAuthenticated ? 'Management Portal' : 'Agent Login'}
+        >
+          <LogIn size={15} />
+          {isAuthenticated ? 'Portal' : 'Agent Login'}
+        </Link>
       </div>
     </header>
   );

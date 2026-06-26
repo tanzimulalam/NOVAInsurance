@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Send } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Send, UserPlus, X } from 'lucide-react';
 import { useLeadTracking } from '../hooks/useLeadTracking';
+import IdUpload from '../components/IdUpload';
 
 const formatTitle = (type) => {
   if (!type) return '';
@@ -20,6 +21,8 @@ const QuoteForm = () => {
     address: '',
     zip: '',
     contactPreference: 'Phone',
+    idPhoto: '',
+    additionalPersons: [],
     vin: '',
     license: '',
     dob: '',
@@ -30,11 +33,40 @@ const QuoteForm = () => {
 
   const isAuto = type === 'auto';
   const totalSteps = isAuto ? 2 : 1;
-  const isSubmitted = step === 'success';
-  const { markComplete } = useLeadTracking(type, formData, isSubmitted);
+  const { markComplete } = useLeadTracking(type);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const setIdPhoto = (dataUrl) => {
+    setFormData((prev) => ({ ...prev, idPhoto: dataUrl }));
+  };
+
+  const addPerson = () => {
+    setFormData((prev) => ({
+      ...prev,
+      additionalPersons: [
+        ...prev.additionalPersons,
+        { name: '', phone: '', email: '', address: '', zip: '', contactPreference: 'Phone', idPhoto: '' },
+      ],
+    }));
+  };
+
+  const updatePerson = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      additionalPersons: prev.additionalPersons.map((p, i) =>
+        i === index ? { ...p, [field]: value } : p
+      ),
+    }));
+  };
+
+  const removePerson = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      additionalPersons: prev.additionalPersons.filter((_, i) => i !== index),
+    }));
   };
 
   const handleNext = async (e) => {
@@ -137,6 +169,103 @@ const QuoteForm = () => {
                   <option value="Email">Email</option>
                   <option value="Text">Text Message</option>
                 </select>
+              </div>
+
+              <div className="form-group full-width">
+                <IdUpload value={formData.idPhoto} onChange={setIdPhoto} />
+              </div>
+
+              {formData.additionalPersons.length > 0 && (
+                <div className="full-width">
+                  {formData.additionalPersons.map((person, index) => (
+                    <div className="person-block" key={index}>
+                      <div className="person-block-head">
+                        <span className="person-block-title">Additional Person {index + 2}</span>
+                        <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#dc2626' }} onClick={() => removePerson(index)}>
+                          <X size={14} /> Remove
+                        </button>
+                      </div>
+                      <div className="form-grid">
+                        <div className="form-group">
+                          <label className="form-label">Full Name *</label>
+                          <input
+                            type="text"
+                            required
+                            className="form-control"
+                            value={person.name}
+                            onChange={(e) => updatePerson(index, 'name', e.target.value)}
+                            placeholder="John Smith"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Phone Number *</label>
+                          <input
+                            type="tel"
+                            required
+                            className="form-control"
+                            value={person.phone}
+                            onChange={(e) => updatePerson(index, 'phone', e.target.value)}
+                            placeholder="(555) 123-4567"
+                          />
+                        </div>
+                        <div className="form-group full-width">
+                          <label className="form-label">Email Address *</label>
+                          <input
+                            type="email"
+                            required
+                            className="form-control"
+                            value={person.email}
+                            onChange={(e) => updatePerson(index, 'email', e.target.value)}
+                            placeholder="you@email.com"
+                          />
+                        </div>
+                        <div className="form-group full-width">
+                          <label className="form-label">Street Address *</label>
+                          <input
+                            type="text"
+                            required
+                            className="form-control"
+                            value={person.address}
+                            onChange={(e) => updatePerson(index, 'address', e.target.value)}
+                            placeholder="123 Main St"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">ZIP Code *</label>
+                          <input
+                            type="text"
+                            required
+                            className="form-control"
+                            value={person.zip}
+                            onChange={(e) => updatePerson(index, 'zip', e.target.value)}
+                            placeholder="10001"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Preferred Contact</label>
+                          <select
+                            className="form-control"
+                            value={person.contactPreference}
+                            onChange={(e) => updatePerson(index, 'contactPreference', e.target.value)}
+                          >
+                            <option value="Phone">Phone</option>
+                            <option value="Email">Email</option>
+                            <option value="Text">Text Message</option>
+                          </select>
+                        </div>
+                        <div className="form-group full-width" style={{ marginBottom: 0 }}>
+                          <IdUpload value={person.idPhoto} onChange={(dataUrl) => updatePerson(index, 'idPhoto', dataUrl)} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="full-width">
+                <button type="button" className="btn btn-outline add-person-btn" onClick={addPerson}>
+                  <UserPlus size={16} /> Add Another Person
+                </button>
               </div>
             </div>
           )}

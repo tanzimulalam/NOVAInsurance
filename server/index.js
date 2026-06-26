@@ -18,7 +18,8 @@ const sseClients = new Set();
 const sessions = new Map();
 
 app.use(cors());
-app.use(express.json());
+// Limit raised to accommodate base64-encoded ID photos in lead payloads.
+app.use(express.json({ limit: '25mb' }));
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {

@@ -1,34 +1,51 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+import { supabase } from '../lib/supabase';
 
-async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('lri_token');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-
-  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Request failed');
-  }
-  return res.json();
-}
-
-export const authApi = {
-  login: (username, password) =>
-    request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
-  verify: () => request('/api/auth/verify'),
-  logout: () => request('/api/auth/logout', { method: 'POST' }),
-};
-
+// Leads are stored in the Supabase "leads" table:
+//   id (uuid) | type (text) | status (text) | data (jsonb) | created_at | updated_at
+// Anonymous visitors can INSERT and UPDATE (so drafts save as they type),
+// while only the authenticated owner can SELECT and DELETE (Row Level Security).
 export const leadsApi = {
-  getAll: () => request('/api/leads'),
-  create: (type, data = {}) =>
-    request('/api/leads', { method: 'POST', body: JSON.stringify({ type, data }) }),
-  update: (id, payload) =>
-    request(`/api/leads/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
-  delete: (id) => request(`/api/leads/${id}`, { method: 'DELETE' }),
-  streamUrl: () => `${API_BASE}/api/leads/stream`,
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
+  create: async (type, data = {}, status = 'incomplete') => {
+    // Generate the id client-side so we don't need SELECT permission to read it back.
+    const id = crypto.randomUUID();
+    const { error } = await supabase
+      .from('leads')
+      .insert({ id, type: type || 'unknown', status, data });
+    if (error) throw new Error(error.message);
+    return { id };
+  },
+
+  update: async (id, payload) => {
+    const patch = { updated_at: new Date().toISOString() };
+    if (payload.data !== undefined) patch.data = payload.data;
+    if (payload.status) patch.status = payload.status;
+    const { error } = await supabase.from('leads').update(patch).eq('id', id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+
+  delete: async (id) => {
+    const { error } = await supabase.from('leads').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+
+  // Live updates: calls onChange whenever any lead is inserted/updated/deleted.
+  // Returns an unsubscribe function.
+  subscribe: (onChange) => {
+    const channel = supabase
+      .channel('leads-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, onChange)
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  },
 };

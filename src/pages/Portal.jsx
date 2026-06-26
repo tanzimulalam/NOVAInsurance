@@ -51,54 +51,14 @@ const Portal = () => {
   useEffect(() => {
     fetchLeads();
 
-    const token = localStorage.getItem('lri_token');
-    let aborted = false;
-    const controller = new AbortController();
-
-    async function streamLeads() {
-      try {
-        const res = await fetch(leadsApi.streamUrl(), {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-
-        if (!res.ok) throw new Error('Stream failed');
-
-        setConnected(true);
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (!aborted) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                setLeads(data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)));
-              } catch { /* skip malformed */ }
-            }
-          }
-        }
-      } catch {
-        if (!aborted) {
-          setConnected(false);
-          setTimeout(streamLeads, 3000);
-        }
-      }
-    }
-
-    streamLeads();
+    const unsubscribe = leadsApi.subscribe(() => {
+      setConnected(true);
+      fetchLeads();
+    });
+    setConnected(true);
 
     return () => {
-      aborted = true;
-      controller.abort();
+      unsubscribe();
     };
   }, [fetchLeads]);
 
@@ -126,7 +86,7 @@ const Portal = () => {
           <img src={`${import.meta.env.BASE_URL}icon.png`} alt="Low Rate Insurance" />
           <div>
           <h1>Low Rate Insurance Management Portal</h1>
-          <p>Welcome, {user?.username} &nbsp;·&nbsp;
+          <p>Welcome, {user?.email} &nbsp;·&nbsp;
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               {connected ? (
                 <><span className="live-dot" /> Live</>
@@ -200,7 +160,7 @@ const Portal = () => {
                       </td>
                       <td>{getLeadName(lead)}</td>
                       <td>{getLeadContact(lead)}</td>
-                      <td style={{ color: 'var(--slate-500)', fontSize: '0.85rem' }}>{formatDate(lead.updatedAt)}</td>
+                      <td style={{ color: 'var(--slate-500)', fontSize: '0.85rem' }}>{formatDate(lead.updated_at)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
                           <button className="btn btn-ghost btn-sm" onClick={() => setSelected(lead)} title="View details">
@@ -225,7 +185,7 @@ const Portal = () => {
               <div>
                 <h3 style={{ fontSize: '1.25rem' }}>Lead Details</h3>
                 <p style={{ color: 'var(--slate-500)', fontSize: '0.85rem', marginTop: '4px' }}>
-                  ID: {selected.id} &nbsp;·&nbsp; Created {formatDate(selected.createdAt)}
+                  ID: {selected.id} &nbsp;·&nbsp; Created {formatDate(selected.created_at)}
                 </p>
               </div>
               <button className="btn btn-ghost btn-sm" onClick={() => setSelected(null)}>
@@ -244,7 +204,8 @@ const Portal = () => {
 
             <div className="lead-detail-grid">
               {Object.entries(selected.data || {}).map(([key, value]) => {
-                if (!value || String(value).trim() === '') return null;
+                if (key === 'idPhoto' || key === 'additionalPersons') return null;
+                if (value === null || value === undefined || String(value).trim() === '') return null;
                 const label = key
                   .replace(/([A-Z])/g, ' $1')
                   .replace(/^./, (s) => s.toUpperCase());
@@ -257,7 +218,55 @@ const Portal = () => {
               })}
             </div>
 
-            {Object.values(selected.data || {}).every((v) => !v || String(v).trim() === '') && (
+            {selected.data?.idPhoto && (
+              <div className="lead-id-photo">
+                <label>Photo ID</label>
+                <a href={selected.data.idPhoto} target="_blank" rel="noopener noreferrer">
+                  <img src={selected.data.idPhoto} alt="Photo ID" />
+                </a>
+              </div>
+            )}
+
+            {Array.isArray(selected.data?.additionalPersons) && selected.data.additionalPersons.length > 0 && (
+              <div className="lead-persons">
+                <h4 style={{ fontSize: '1rem', margin: '20px 0 12px' }}>Additional People</h4>
+                {selected.data.additionalPersons.map((person, index) => (
+                  <div key={index} className="lead-person-item">
+                    <h5 style={{ fontSize: '0.9rem', margin: '0 0 10px', color: 'var(--blue-700)' }}>
+                      Person {index + 2}
+                    </h5>
+                    <div className="lead-detail-grid">
+                      {Object.entries(person).map(([key, value]) => {
+                        if (key === 'idPhoto') return null;
+                        if (value === null || value === undefined || String(value).trim() === '') return null;
+                        const label = key
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, (s) => s.toUpperCase());
+                        return (
+                          <div key={key} className="lead-detail-item">
+                            <label>{label}</label>
+                            <span>{value}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {person.idPhoto && (
+                      <div className="lead-id-photo">
+                        <label>Photo ID</label>
+                        <a href={person.idPhoto} target="_blank" rel="noopener noreferrer">
+                          <img src={person.idPhoto} alt={`Person ${index + 2} ID`} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {Object.entries(selected.data || {}).every(([key, v]) => {
+              if (key === 'additionalPersons') return !Array.isArray(v) || v.length === 0;
+              return !v || String(v).trim() === '';
+            }) && (
               <p style={{ color: 'var(--slate-500)', marginTop: '12px' }}>
                 No information entered yet. The visitor started the form but has not filled in any fields.
               </p>

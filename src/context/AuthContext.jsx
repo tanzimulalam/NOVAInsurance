@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../api/client';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -8,37 +8,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('lri_token');
-    const username = localStorage.getItem('lri_user');
-    if (token && username) {
-      authApi
-        .verify()
-        .then(() => setUser({ token, username }))
-        .catch(() => {
-          localStorage.removeItem('lri_token');
-          localStorage.removeItem('lri_user');
-        })
-        .finally(() => setLoading(false));
-    } else {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoading(false);
-    }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (username, password) => {
-    const { token, username: name } = await authApi.login(username, password);
-    localStorage.setItem('lri_token', token);
-    localStorage.setItem('lri_user', name);
-    setUser({ token, username: name });
+  const login = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
   };
 
   const logout = async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      /* token may already be invalid */
-    }
-    localStorage.removeItem('lri_token');
-    localStorage.removeItem('lri_user');
+    await supabase.auth.signOut();
     setUser(null);
   };
 
