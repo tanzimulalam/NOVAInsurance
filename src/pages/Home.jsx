@@ -26,7 +26,7 @@ const slogans = [
 
 const stats = [
   { value: '100+', label: 'Happy Clients' },
-  { value: 'DC, MD, VA', label: 'Serving DC, Maryland, Virginia' },
+  { value: 'DC, MD, VA, PA', label: 'Serving DC, Maryland, Virginia, Pennsylvania' },
   { value: '24h', label: 'Response Time' },
 ];
 
