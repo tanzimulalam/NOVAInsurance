@@ -39,6 +39,18 @@ export const leadsApi = {
     return { success: true };
   },
 
+  // Public self-service lookup: a customer finds their own submission by
+  // last name + phone. Backed by a SECURITY DEFINER Postgres function so it
+  // only ever returns rows matching BOTH values (see SUPABASE_SETUP.md).
+  searchMine: async (lastName, phone) => {
+    const { data, error } = await supabase.rpc('search_my_leads', {
+      p_last_name: lastName,
+      p_phone: phone,
+    });
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
   // Live updates: calls onChange whenever any lead is inserted/updated/deleted.
   // Returns an unsubscribe function.
   subscribe: (onChange) => {

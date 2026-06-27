@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Camera, ImagePlus, Trash2, Loader2 } from 'lucide-react';
 import { compressImage } from '../utils/image';
 
-const IdUpload = ({ value, onChange, label = 'Photo ID (optional)' }) => {
+const IdUpload = ({ value, onChange, label = 'Photo ID', required = false }) => {
   const galleryRef = useRef(null);
   const cameraRef = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -29,7 +29,7 @@ const IdUpload = ({ value, onChange, label = 'Photo ID (optional)' }) => {
 
   return (
     <div className="id-upload">
-      <label className="form-label">{label}</label>
+      <label className="form-label">{label}{required ? ' *' : ' (optional)'}</label>
 
       {value ? (
         <div className="id-upload-preview">

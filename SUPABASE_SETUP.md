@@ -139,6 +139,35 @@ two keys:
 
 ---
 
+## Customer self-service lookup (required for the "Existing Customer Search" button)
+
+This lets a customer find their own submission by **last name + phone**, without
+being able to see anyone else's data. It uses a secure database function.
+
+Run this once in `SQL Editor`:
+
+```sql
+create or replace function public.search_my_leads(p_last_name text, p_phone text)
+returns table (id uuid, type text, status text, data jsonb, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select id, type, status, data, created_at
+  from public.leads
+  where lower(trim(data->>'lastName')) = lower(trim(p_last_name))
+    and regexp_replace(coalesce(data->>'phone', ''), '\D', '', 'g')
+        = regexp_replace(coalesce(p_phone, ''), '\D', '', 'g')
+    and regexp_replace(coalesce(p_phone, ''), '\D', '', 'g') <> ''
+  order by created_at desc;
+$$;
+
+grant execute on function public.search_my_leads(text, text) to anon, authenticated;
+```
+
+It only returns rows where BOTH the last name and the phone digits match what
+the customer typed, so it can't be used to browse other people's submissions.
+
 ## Notes
 
 - The old `server/` folder and `server/data/leads.json` are no longer used and

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, LogIn } from 'lucide-react';
+import { Phone, Mail, LogIn, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
@@ -29,6 +29,10 @@ const Header = () => {
           <Mail size={15} />
           md.ahmed@lowrateprotection.com
         </a>
+        <Link to="/lookup" className="btn btn-outline btn-sm header-login" title="Find your existing submission">
+          <Search size={15} />
+          Existing Customer Search
+        </Link>
         <Link
           to={isAuthenticated ? '/portal' : '/login'}
           className="btn btn-outline btn-sm header-login"

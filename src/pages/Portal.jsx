@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LogOut, RefreshCw, Trash2, Eye, X, Radio,
+  LogOut, RefreshCw, Trash2, Eye, X, Radio, Search,
   Car, Home, Building2, Shield, Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,8 @@ const typeIcons = {
   cyber: Shield,
   others: Shield,
 };
+
+const COMPLEX_KEYS = ['idPhoto', 'additionalDocument', 'documents', 'additionalPersons', 'vehicles'];
 
 const formatType = (type) => {
   if (type === 'others') return 'Other';
@@ -36,6 +38,7 @@ const Portal = () => {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [search, setSearch] = useState('');
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -76,8 +79,23 @@ const Portal = () => {
   const completeCount = leads.filter((l) => l.status === 'complete').length;
   const incompleteCount = leads.filter((l) => l.status === 'incomplete').length;
 
-  const getLeadName = (lead) => lead.data?.name || '-';
+  const getLeadName = (lead) => {
+    const d = lead.data || {};
+    return [d.firstName, d.lastName].filter(Boolean).join(' ') || d.name || '-';
+  };
   const getLeadContact = (lead) => lead.data?.phone || lead.data?.email || '-';
+
+  const term = search.trim().toLowerCase();
+  const filteredLeads = term
+    ? leads.filter((l) => {
+        const d = l.data || {};
+        const hay = [d.firstName, d.lastName, d.name, d.phone, d.email, l.type]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return hay.includes(term);
+      })
+    : leads;
 
   return (
     <div className="portal-layout">
@@ -123,12 +141,32 @@ const Portal = () => {
           </div>
         </div>
 
+        <div className="portal-search">
+          <Search size={16} color="var(--slate-500)" />
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search by name, phone, email, or type..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title="Clear">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
         <div className="glass-panel leads-table-wrap">
           {loading ? (
             <p style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>Loading leads...</p>
           ) : leads.length === 0 ? (
             <p style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>
               No leads yet. Leads will appear here in real-time when visitors fill out quote forms.
+            </p>
+          ) : filteredLeads.length === 0 ? (
+            <p style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>
+              No leads match "{search}".
             </p>
           ) : (
             <table className="leads-table">
@@ -143,7 +181,7 @@ const Portal = () => {
                 </tr>
               </thead>
               <tbody>
-                {leads.map((lead) => {
+                {filteredLeads.map((lead) => {
                   const Icon = typeIcons[lead.type] || Shield;
                   return (
                     <tr key={lead.id} style={{ cursor: 'pointer' }} onClick={() => setSelected(lead)}>
@@ -204,7 +242,7 @@ const Portal = () => {
 
             <div className="lead-detail-grid">
               {Object.entries(selected.data || {}).map(([key, value]) => {
-                if (key === 'idPhoto' || key === 'additionalPersons') return null;
+                if (COMPLEX_KEYS.includes(key)) return null;
                 if (value === null || value === undefined || String(value).trim() === '') return null;
                 const label = key
                   .replace(/([A-Z])/g, ' $1')
@@ -220,10 +258,49 @@ const Portal = () => {
 
             {selected.data?.idPhoto && (
               <div className="lead-id-photo">
-                <label>Photo ID</label>
+                <label>{selected.type === 'auto' ? "Driver's License" : 'ID Document'}</label>
                 <a href={selected.data.idPhoto} target="_blank" rel="noopener noreferrer">
-                  <img src={selected.data.idPhoto} alt="Photo ID" />
+                  <img src={selected.data.idPhoto} alt="ID document" />
                 </a>
+              </div>
+            )}
+
+            {selected.data?.additionalDocument && (
+              <div className="lead-id-photo">
+                <label>Additional Document</label>
+                <a href={selected.data.additionalDocument} target="_blank" rel="noopener noreferrer">
+                  <img src={selected.data.additionalDocument} alt="Additional document" />
+                </a>
+              </div>
+            )}
+
+            {Array.isArray(selected.data?.documents) && selected.data.documents.length > 0 && (
+              <div className="lead-id-photo">
+                <label>Documents ({selected.data.documents.length})</label>
+                <div className="multi-doc-grid">
+                  {selected.data.documents.map((doc, i) => (
+                    <a key={i} href={doc} target="_blank" rel="noopener noreferrer" className="multi-doc-item">
+                      <img src={doc} alt={`Document ${i + 1}`} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {Array.isArray(selected.data?.vehicles) && selected.data.vehicles.length > 0 && (
+              <div className="lead-persons">
+                <h4 style={{ fontSize: '1rem', margin: '20px 0 12px' }}>Vehicles</h4>
+                {selected.data.vehicles.map((vehicle, index) => (
+                  <div key={index} className="lead-person-item">
+                    <h5 style={{ fontSize: '0.9rem', margin: '0 0 10px', color: 'var(--blue-700)' }}>Vehicle {index + 1}</h5>
+                    <div className="lead-detail-grid">
+                      <div className="lead-detail-item"><label>VIN</label><span>{vehicle.vin || '-'}</span></div>
+                      <div className="lead-detail-item"><label>Financial Status</label><span>{vehicle.vehicleStatus || '-'}</span></div>
+                      {vehicle.financeCompany && <div className="lead-detail-item"><label>Finance Company</label><span>{vehicle.financeCompany}</span></div>}
+                      {vehicle.lenderName && <div className="lead-detail-item"><label>Lender Name</label><span>{vehicle.lenderName}</span></div>}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -233,26 +310,11 @@ const Portal = () => {
                 {selected.data.additionalPersons.map((person, index) => (
                   <div key={index} className="lead-person-item">
                     <h5 style={{ fontSize: '0.9rem', margin: '0 0 10px', color: 'var(--blue-700)' }}>
-                      Person {index + 2}
+                      {[person.firstName, person.lastName].filter(Boolean).join(' ') || `Person ${index + 2}`}
                     </h5>
-                    <div className="lead-detail-grid">
-                      {Object.entries(person).map(([key, value]) => {
-                        if (key === 'idPhoto') return null;
-                        if (value === null || value === undefined || String(value).trim() === '') return null;
-                        const label = key
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, (s) => s.toUpperCase());
-                        return (
-                          <div key={key} className="lead-detail-item">
-                            <label>{label}</label>
-                            <span>{value}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
                     {person.idPhoto && (
                       <div className="lead-id-photo">
-                        <label>Photo ID</label>
+                        <label>{selected.type === 'auto' ? "Driver's License" : 'ID Document'}</label>
                         <a href={person.idPhoto} target="_blank" rel="noopener noreferrer">
                           <img src={person.idPhoto} alt={`Person ${index + 2} ID`} />
                         </a>
@@ -261,15 +323,6 @@ const Portal = () => {
                   </div>
                 ))}
               </div>
-            )}
-
-            {Object.entries(selected.data || {}).every(([key, v]) => {
-              if (key === 'additionalPersons') return !Array.isArray(v) || v.length === 0;
-              return !v || String(v).trim() === '';
-            }) && (
-              <p style={{ color: 'var(--slate-500)', marginTop: '12px' }}>
-                No information entered yet. The visitor started the form but has not filled in any fields.
-              </p>
             )}
           </div>
         )}

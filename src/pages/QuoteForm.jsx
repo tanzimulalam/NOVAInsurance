@@ -1,67 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Send, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Send, UserPlus, Car, X } from 'lucide-react';
 import { useLeadTracking } from '../hooks/useLeadTracking';
 import IdUpload from '../components/IdUpload';
+import MultiDocUpload from '../components/MultiDocUpload';
 
 const formatTitle = (type) => {
   if (!type) return '';
   return type.charAt(0).toUpperCase() + type.slice(1) + (type === 'others' ? ' Coverage' : ' Insurance');
 };
 
+const emptyVehicle = () => ({ vin: '', vehicleStatus: 'Owned', financeCompany: '', lenderName: '' });
+
 const QuoteForm = () => {
   const { type } = useParams();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
-    zip: '',
-    contactPreference: 'Phone',
-    idPhoto: '',
-    additionalPersons: [],
-    vin: '',
-    license: '',
-    dob: '',
-    vehicleStatus: 'Owned',
-    financeCompany: '',
-    lenderName: '',
-  });
+  const [error, setError] = useState('');
 
   const isAuto = type === 'auto';
+  const isCommercial = type === 'commercial';
   const totalSteps = isAuto ? 2 : 1;
+
+  const idLabel = isAuto ? "Driver's License" : 'State ID';
+  const personNoun = isAuto ? 'Driver' : type === 'home' ? 'Co-Applicant' : isCommercial ? 'Partner' : 'Person';
+  const addPersonLabel = isAuto
+    ? 'Add Another Driver'
+    : type === 'home'
+      ? 'Add Co-Applicant'
+      : isCommercial
+        ? 'Add Another Partner'
+        : 'Add Another Person';
+
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    idPhoto: '',
+    additionalDocument: '',
+    documents: [],
+    additionalPersons: [],
+    vehicles: isAuto ? [emptyVehicle()] : [],
+  });
+
   const { markComplete } = useLeadTracking(type);
+
+  // Fix scroll position when the form loads and on step change.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [step]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const setIdPhoto = (dataUrl) => {
-    setFormData((prev) => ({ ...prev, idPhoto: dataUrl }));
-  };
+  const setField = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
 
   const addPerson = () => {
     setFormData((prev) => ({
       ...prev,
-      additionalPersons: [
-        ...prev.additionalPersons,
-        { name: '', phone: '', email: '', address: '', zip: '', contactPreference: 'Phone', idPhoto: '' },
-      ],
+      additionalPersons: [...prev.additionalPersons, { firstName: '', lastName: '', idPhoto: '' }],
     }));
   };
-
   const updatePerson = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      additionalPersons: prev.additionalPersons.map((p, i) =>
-        i === index ? { ...p, [field]: value } : p
-      ),
+      additionalPersons: prev.additionalPersons.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
     }));
   };
-
   const removePerson = (index) => {
     setFormData((prev) => ({
       ...prev,
@@ -69,8 +77,29 @@ const QuoteForm = () => {
     }));
   };
 
+  const addVehicle = () => {
+    setFormData((prev) => ({ ...prev, vehicles: [...prev.vehicles, emptyVehicle()] }));
+  };
+  const updateVehicle = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      vehicles: prev.vehicles.map((v, i) => (i === index ? { ...v, [field]: value } : v)),
+    }));
+  };
+  const removeVehicle = (index) => {
+    setFormData((prev) => ({ ...prev, vehicles: prev.vehicles.filter((_, i) => i !== index) }));
+  };
+
   const handleNext = async (e) => {
     e.preventDefault();
+
+    // Driver's License is mandatory for auto insurance.
+    if (step === 1 && isAuto && !formData.idPhoto) {
+      setError("Please upload the primary driver's license to continue.");
+      return;
+    }
+    setError('');
+
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
@@ -132,7 +161,7 @@ const QuoteForm = () => {
       <div className="glass-panel" style={{ padding: '40px' }}>
         <h2 style={{ fontSize: '1.75rem', marginBottom: '6px' }}>{formatTitle(type)} Quote</h2>
         <p style={{ color: 'var(--slate-500)', marginBottom: '24px' }}>
-          Step {step} of {totalSteps}: {step === 1 ? 'Your Information' : 'Vehicle Details'}
+          Step {step} of {totalSteps}: {step === 1 ? 'Your Information' : 'Vehicle Information'}
         </p>
 
         <div className="progress-bar">
@@ -143,118 +172,73 @@ const QuoteForm = () => {
           {step === 1 && (
             <div className="form-grid fade-in-up">
               <div className="form-group">
-                <label className="form-label">Full Name *</label>
-                <input type="text" name="name" required className="form-control" value={formData.name} onChange={handleChange} placeholder="John Smith" />
+                <label className="form-label">First Name *</label>
+                <input type="text" name="firstName" required className="form-control" value={formData.firstName} onChange={handleChange} placeholder="John" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Last Name *</label>
+                <input type="text" name="lastName" required className="form-control" value={formData.lastName} onChange={handleChange} placeholder="Smith" />
               </div>
               <div className="form-group">
                 <label className="form-label">Phone Number *</label>
                 <input type="tel" name="phone" required className="form-control" value={formData.phone} onChange={handleChange} placeholder="(555) 123-4567" />
               </div>
-              <div className="form-group full-width">
+              <div className="form-group">
                 <label className="form-label">Email Address *</label>
                 <input type="email" name="email" required className="form-control" value={formData.email} onChange={handleChange} placeholder="you@email.com" />
               </div>
-              <div className="form-group full-width">
-                <label className="form-label">Street Address *</label>
-                <input type="text" name="address" required className="form-control" value={formData.address} onChange={handleChange} placeholder="123 Main St" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">ZIP Code *</label>
-                <input type="text" name="zip" required className="form-control" value={formData.zip} onChange={handleChange} placeholder="10001" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Preferred Contact</label>
-                <select name="contactPreference" className="form-control" value={formData.contactPreference} onChange={handleChange}>
-                  <option value="Phone">Phone</option>
-                  <option value="Email">Email</option>
-                  <option value="Text">Text Message</option>
-                </select>
-              </div>
 
               <div className="form-group full-width">
-                <IdUpload value={formData.idPhoto} onChange={setIdPhoto} />
+                <IdUpload value={formData.idPhoto} onChange={(v) => setField('idPhoto', v)} label={idLabel} required={isAuto} />
               </div>
+
+              {isAuto && (
+                <div className="form-group full-width">
+                  <IdUpload value={formData.additionalDocument} onChange={(v) => setField('additionalDocument', v)} label="Upload Additional Document" />
+                </div>
+              )}
+
+              {isCommercial && (
+                <div className="form-group full-width">
+                  <MultiDocUpload values={formData.documents} onChange={(v) => setField('documents', v)} label="Upload Documents" />
+                </div>
+              )}
 
               {formData.additionalPersons.length > 0 && (
                 <div className="full-width">
                   {formData.additionalPersons.map((person, index) => (
                     <div className="person-block" key={index}>
                       <div className="person-block-head">
-                        <span className="person-block-title">Additional Person {index + 2}</span>
+                        <span className="person-block-title">{personNoun} {index + 2}</span>
                         <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#dc2626' }} onClick={() => removePerson(index)}>
                           <X size={14} /> Remove
                         </button>
                       </div>
                       <div className="form-grid">
                         <div className="form-group">
-                          <label className="form-label">Full Name *</label>
+                          <label className="form-label">First Name *</label>
                           <input
                             type="text"
                             required
                             className="form-control"
-                            value={person.name}
-                            onChange={(e) => updatePerson(index, 'name', e.target.value)}
-                            placeholder="John Smith"
+                            value={person.firstName}
+                            onChange={(e) => updatePerson(index, 'firstName', e.target.value)}
+                            placeholder="Jane"
                           />
                         </div>
                         <div className="form-group">
-                          <label className="form-label">Phone Number *</label>
-                          <input
-                            type="tel"
-                            required
-                            className="form-control"
-                            value={person.phone}
-                            onChange={(e) => updatePerson(index, 'phone', e.target.value)}
-                            placeholder="(555) 123-4567"
-                          />
-                        </div>
-                        <div className="form-group full-width">
-                          <label className="form-label">Email Address *</label>
-                          <input
-                            type="email"
-                            required
-                            className="form-control"
-                            value={person.email}
-                            onChange={(e) => updatePerson(index, 'email', e.target.value)}
-                            placeholder="you@email.com"
-                          />
-                        </div>
-                        <div className="form-group full-width">
-                          <label className="form-label">Street Address *</label>
+                          <label className="form-label">Last Name *</label>
                           <input
                             type="text"
                             required
                             className="form-control"
-                            value={person.address}
-                            onChange={(e) => updatePerson(index, 'address', e.target.value)}
-                            placeholder="123 Main St"
+                            value={person.lastName}
+                            onChange={(e) => updatePerson(index, 'lastName', e.target.value)}
+                            placeholder="Smith"
                           />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">ZIP Code *</label>
-                          <input
-                            type="text"
-                            required
-                            className="form-control"
-                            value={person.zip}
-                            onChange={(e) => updatePerson(index, 'zip', e.target.value)}
-                            placeholder="10001"
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Preferred Contact</label>
-                          <select
-                            className="form-control"
-                            value={person.contactPreference}
-                            onChange={(e) => updatePerson(index, 'contactPreference', e.target.value)}
-                          >
-                            <option value="Phone">Phone</option>
-                            <option value="Email">Email</option>
-                            <option value="Text">Text Message</option>
-                          </select>
                         </div>
                         <div className="form-group full-width" style={{ marginBottom: 0 }}>
-                          <IdUpload value={person.idPhoto} onChange={(dataUrl) => updatePerson(index, 'idPhoto', dataUrl)} />
+                          <IdUpload value={person.idPhoto} onChange={(v) => updatePerson(index, 'idPhoto', v)} label={idLabel} />
                         </div>
                       </div>
                     </div>
@@ -264,48 +248,82 @@ const QuoteForm = () => {
 
               <div className="full-width">
                 <button type="button" className="btn btn-outline add-person-btn" onClick={addPerson}>
-                  <UserPlus size={16} /> Add Another Person
+                  <UserPlus size={16} /> {addPersonLabel}
                 </button>
               </div>
             </div>
           )}
 
           {step === 2 && isAuto && (
-            <div className="form-grid fade-in-up">
-              <div className="form-group">
-                <label className="form-label">VIN *</label>
-                <input type="text" name="vin" required className="form-control" value={formData.vin} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Driver&apos;s License *</label>
-                <input type="text" name="license" required className="form-control" value={formData.license} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Date of Birth *</label>
-                <input type="date" name="dob" required className="form-control" value={formData.dob} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Vehicle Status</label>
-                <select name="vehicleStatus" className="form-control" value={formData.vehicleStatus} onChange={handleChange}>
-                  <option value="Owned">Owned</option>
-                  <option value="Financed">Financed</option>
-                  <option value="Leased">Leased</option>
-                </select>
-              </div>
-              {formData.vehicleStatus === 'Financed' && (
-                <div className="form-group full-width">
-                  <label className="form-label">Finance Company *</label>
-                  <input type="text" name="financeCompany" required className="form-control" value={formData.financeCompany} onChange={handleChange} />
+            <div className="fade-in-up">
+              {formData.vehicles.map((vehicle, index) => (
+                <div className="person-block" key={index}>
+                  <div className="person-block-head">
+                    <span className="person-block-title">Vehicle {index + 1}</span>
+                    {index > 0 && (
+                      <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#dc2626' }} onClick={() => removeVehicle(index)}>
+                        <X size={14} /> Remove
+                      </button>
+                    )}
+                  </div>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label className="form-label">VIN Number</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={vehicle.vin}
+                        onChange={(e) => updateVehicle(index, 'vin', e.target.value)}
+                        placeholder="Vehicle Identification Number"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Vehicle Financial Status</label>
+                      <select
+                        className="form-control"
+                        value={vehicle.vehicleStatus}
+                        onChange={(e) => updateVehicle(index, 'vehicleStatus', e.target.value)}
+                      >
+                        <option value="Owned">Owned</option>
+                        <option value="Financed">Financed</option>
+                        <option value="Leased">Leased</option>
+                      </select>
+                    </div>
+                    {vehicle.vehicleStatus === 'Financed' && (
+                      <div className="form-group full-width">
+                        <label className="form-label">Finance Company *</label>
+                        <input
+                          type="text"
+                          required
+                          className="form-control"
+                          value={vehicle.financeCompany}
+                          onChange={(e) => updateVehicle(index, 'financeCompany', e.target.value)}
+                        />
+                      </div>
+                    )}
+                    {vehicle.vehicleStatus === 'Leased' && (
+                      <div className="form-group full-width">
+                        <label className="form-label">Lender Name *</label>
+                        <input
+                          type="text"
+                          required
+                          className="form-control"
+                          value={vehicle.lenderName}
+                          onChange={(e) => updateVehicle(index, 'lenderName', e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-              {formData.vehicleStatus === 'Leased' && (
-                <div className="form-group full-width">
-                  <label className="form-label">Lender Name *</label>
-                  <input type="text" name="lenderName" required className="form-control" value={formData.lenderName} onChange={handleChange} />
-                </div>
-              )}
+              ))}
+
+              <button type="button" className="btn btn-outline add-person-btn" onClick={addVehicle}>
+                <Car size={16} /> Add Another Vehicle
+              </button>
             </div>
           )}
+
+          {error && <p className="id-upload-error" style={{ marginTop: '16px' }}>{error}</p>}
 
           <div style={{ marginTop: '28px', display: 'flex', justifyContent: 'flex-end' }}>
             <button type="submit" className="btn btn-primary" disabled={submitting}>

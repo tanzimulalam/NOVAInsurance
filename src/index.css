@@ -698,6 +698,68 @@ button, input, select, textarea {
   justify-content: center;
 }
 
+/* ── Multi-document upload ── */
+.multi-doc-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.multi-doc-item {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--slate-200);
+}
+
+.multi-doc-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.multi-doc-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(220, 38, 38, 0.92);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ── Portal search ── */
+.portal-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  background: var(--white);
+  border: 1.5px solid var(--slate-300);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+}
+
+.portal-search .form-control {
+  border: none;
+  padding: 10px 0;
+  background: transparent;
+}
+
+.portal-search .form-control:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 /* Progress bar */
 .progress-bar {
   height: 6px;
@@ -985,7 +1047,9 @@ button, input, select, textarea {
 .header-contact {
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 20px;
 }
 
 .header-contact a {
