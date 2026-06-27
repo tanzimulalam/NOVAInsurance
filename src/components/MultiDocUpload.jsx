@@ -32,7 +32,7 @@ const MultiDocUpload = ({ values = [], onChange, label = 'Documents' }) => {
 
   return (
     <div className="id-upload">
-      <label className="form-label">{label} (optional)</label>
+      <label className="form-label">{label}</label>
 
       {values.length > 0 && (
         <div className="multi-doc-grid">

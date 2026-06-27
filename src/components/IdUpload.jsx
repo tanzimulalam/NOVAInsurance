@@ -29,7 +29,7 @@ const IdUpload = ({ value, onChange, label = 'Photo ID', required = false }) => 
 
   return (
     <div className="id-upload">
-      <label className="form-label">{label}{required ? ' *' : ' (optional)'}</label>
+      <label className="form-label">{label}{required ? ' *' : ''}</label>
 
       {value ? (
         <div className="id-upload-preview">
