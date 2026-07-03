@@ -31,7 +31,8 @@ const Header = () => {
         </a>
         <Link to="/lookup" className="btn btn-outline btn-sm header-login" title="Find your existing submission">
           <Search size={15} />
-          Existing Customer Search
+          <span className="header-btn-long">Existing Customer Search</span>
+          <span className="header-btn-short">Search</span>
         </Link>
         <Link
           to={isAuthenticated ? '/portal' : '/login'}
@@ -39,7 +40,8 @@ const Header = () => {
           title={isAuthenticated ? 'Management Portal' : 'Agent Login'}
         >
           <LogIn size={15} />
-          {isAuthenticated ? 'Portal' : 'Agent Login'}
+          <span className="header-btn-long">{isAuthenticated ? 'Portal' : 'Agent Login'}</span>
+          <span className="header-btn-short">{isAuthenticated ? 'Portal' : 'Login'}</span>
         </Link>
       </div>
     </header>

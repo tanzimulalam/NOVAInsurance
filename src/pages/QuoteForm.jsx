@@ -5,6 +5,12 @@ import { useLeadTracking } from '../hooks/useLeadTracking';
 import IdUpload from '../components/IdUpload';
 import MultiDocUpload from '../components/MultiDocUpload';
 import { INSURANCE_COMPANIES } from '../constants/insuranceCompanies';
+import {
+  VALID_QUOTE_TYPES,
+  displayToIso,
+  isoToDisplay,
+  prepareSubmitData,
+} from '../utils/format';
 
 const formatTitle = (type) => {
   if (!type) return '';
@@ -12,24 +18,6 @@ const formatTitle = (type) => {
 };
 
 const emptyVehicle = () => ({ vin: '', vehicleStatus: 'Owned', financeCompany: '', lenderName: '' });
-
-const isoToDisplay = (iso) => {
-  if (!iso) return '';
-  const [y, m, d] = iso.split('-');
-  if (!y || !m || !d) return '';
-  return `${m}/${d}/${y}`;
-};
-
-const displayToIso = (text) => {
-  const match = text.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return '';
-  const [, month, day, year] = match;
-  const mm = month.padStart(2, '0');
-  const dd = day.padStart(2, '0');
-  const date = new Date(`${year}-${mm}-${dd}T12:00:00`);
-  if (Number.isNaN(date.getTime()) || date.getFullYear() !== Number(year)) return '';
-  return `${year}-${mm}-${dd}`;
-};
 
 const QuoteForm = () => {
   const { type } = useParams();
@@ -69,13 +57,18 @@ const QuoteForm = () => {
 
   const { markComplete } = useLeadTracking(type);
 
-  // Fix scroll position when the form loads and on step change.
+  useEffect(() => {
+    if (!VALID_QUOTE_TYPES.includes(type)) {
+      navigate('/', { replace: true });
+    }
+  }, [type, navigate]);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [step]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const setField = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
@@ -91,11 +84,15 @@ const QuoteForm = () => {
 
   const handlePolicyDateText = (e) => {
     const text = e.target.value;
+    if (!text.trim()) {
+      setFormData((prev) => ({ ...prev, policyEffectiveDateText: '', policyEffectiveDate: '' }));
+      return;
+    }
     const iso = displayToIso(text);
     setFormData((prev) => ({
       ...prev,
       policyEffectiveDateText: text,
-      policyEffectiveDate: iso || prev.policyEffectiveDate,
+      policyEffectiveDate: iso || '',
     }));
   };
 
@@ -124,7 +121,15 @@ const QuoteForm = () => {
   const updateVehicle = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      vehicles: prev.vehicles.map((v, i) => (i === index ? { ...v, [field]: value } : v)),
+      vehicles: prev.vehicles.map((v, i) => {
+        if (i !== index) return v;
+        const next = { ...v, [field]: value };
+        if (field === 'vehicleStatus' && value === 'Owned') {
+          next.financeCompany = '';
+          next.lenderName = '';
+        }
+        return next;
+      }),
     }));
   };
   const removeVehicle = (index) => {
@@ -139,6 +144,14 @@ const QuoteForm = () => {
       setError("Please upload the primary driver's license to continue.");
       return;
     }
+
+    if (
+      formData.policyEffectiveDateText.trim() &&
+      !formData.policyEffectiveDate
+    ) {
+      setError('Please enter a valid policy effective date (MM/DD/YYYY).');
+      return;
+    }
     setError('');
 
     if (step < totalSteps) {
@@ -146,10 +159,10 @@ const QuoteForm = () => {
     } else {
       setSubmitting(true);
       try {
-        await markComplete(formData);
+        await markComplete(prepareSubmitData(formData));
         setStep('success');
       } catch {
-        setStep('success');
+        setError('We could not submit your request. Please check your connection and try again.');
       } finally {
         setSubmitting(false);
       }
@@ -160,8 +173,8 @@ const QuoteForm = () => {
 
   if (step === 'success') {
     return (
-      <div className="container fade-in-up" style={{ maxWidth: '600px', marginTop: '40px' }}>
-        <div className="glass-panel" style={{ padding: '48px 40px', textAlign: 'center' }}>
+      <div className="container page-narrow fade-in-up">
+        <div className="glass-panel form-panel success-panel">
           <CheckCircle size={64} color="var(--green-500)" style={{ margin: '0 auto 24px' }} />
           <h2 style={{ fontSize: '2rem', marginBottom: '12px' }}>Thank You!</h2>
           <p style={{ fontSize: '1.05rem', color: 'var(--slate-500)', marginBottom: '32px' }}>
@@ -187,19 +200,12 @@ const QuoteForm = () => {
   }
 
   return (
-    <div className="container fade-in-up" style={{ maxWidth: '720px' }}>
-      <button
-        onClick={() => (step > 1 ? setStep(step - 1) : navigate('/'))}
-        style={{
-          background: 'none', border: 'none', color: 'var(--blue-700)',
-          display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-          marginBottom: '20px', fontSize: '0.95rem', fontWeight: 600,
-        }}
-      >
+    <div className="container page-narrow fade-in-up">
+      <button type="button" onClick={() => (step > 1 ? setStep(step - 1) : navigate('/'))} className="back-link">
         <ArrowLeft size={18} /> Back
       </button>
 
-      <div className="glass-panel" style={{ padding: '40px' }}>
+      <div className="glass-panel form-panel">
         <h2 style={{ fontSize: '1.75rem', marginBottom: '6px' }}>{formatTitle(type)} Quote</h2>
         <p style={{ color: 'var(--slate-500)', marginBottom: '24px' }}>
           Step {step} of {totalSteps}: {step === 1 ? 'Your Information' : 'Vehicle Information'}
@@ -257,13 +263,14 @@ const QuoteForm = () => {
                   />
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control${formData.policyEffectiveDateText.trim() && !formData.policyEffectiveDate ? ' input-invalid' : ''}`}
                     value={formData.policyEffectiveDateText}
                     onChange={handlePolicyDateText}
                     placeholder="MM/DD/YYYY"
                     aria-label="Enter policy effective date"
                   />
                 </div>
+                <p className="form-hint">Use the calendar or type the date as MM/DD/YYYY.</p>
               </div>
 
               <div className="form-group full-width">

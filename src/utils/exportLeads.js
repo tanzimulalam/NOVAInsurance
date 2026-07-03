@@ -1,11 +1,5 @@
 import * as XLSX from 'xlsx';
-
-const formatType = (type) => {
-  if (type === 'others') return 'Other';
-  return type ? type.charAt(0).toUpperCase() + type.slice(1) : '';
-};
-
-const leadName = (d = {}) => [d.firstName, d.lastName].filter(Boolean).join(' ') || d.name || '';
+import { formatPolicyDate, leadFullName } from './format';
 
 const summarizePeople = (people) => {
   if (!Array.isArray(people) || people.length === 0) return '';
@@ -34,14 +28,14 @@ export function downloadLeadsExcel(leads) {
     const d = lead.data || {};
     return {
       Status: lead.status === 'complete' ? 'Complete' : 'Incomplete',
-      Type: formatType(lead.type),
+      Type: lead.type ? lead.type.charAt(0).toUpperCase() + lead.type.slice(1) : '',
       'First Name': d.firstName || '',
       'Last Name': d.lastName || '',
-      'Full Name': leadName(d),
+      'Full Name': leadFullName(d),
       Phone: d.phone || '',
       Email: d.email || '',
       'Current Insurance Company': d.currentInsuranceCompany || '',
-      'Policy Effective Date': d.policyEffectiveDate || d.policyEffectiveDateText || '',
+      'Policy Effective Date': formatPolicyDate(d),
       'Additional People': summarizePeople(d.additionalPersons),
       Vehicles: summarizeVehicles(d.vehicles),
       'ID Uploaded': d.idPhoto ? 'Yes' : 'No',

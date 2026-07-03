@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import { leadsApi } from '../api/client';
-
-const formatType = (type) => {
-  if (type === 'others') return 'Other Coverage';
-  return (type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Unknown') + (type === 'others' ? '' : ' Insurance');
-};
+import { formatPolicyDate, formatTypeLabel, leadFullName } from '../utils/format';
 
 const formatDate = (iso) => {
   if (!iso) return '-';
@@ -14,8 +10,6 @@ const formatDate = (iso) => {
     month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
   });
 };
-
-const fullName = (d = {}) => [d.firstName, d.lastName].filter(Boolean).join(' ') || d.name || '-';
 
 const CustomerLookup = () => {
   const navigate = useNavigate();
@@ -42,19 +36,12 @@ const CustomerLookup = () => {
   };
 
   return (
-    <div className="container fade-in-up" style={{ maxWidth: '720px' }}>
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          background: 'none', border: 'none', color: 'var(--blue-700)',
-          display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-          marginBottom: '20px', fontSize: '0.95rem', fontWeight: 600,
-        }}
-      >
+    <div className="container page-narrow fade-in-up">
+      <button type="button" onClick={() => navigate('/')} className="back-link">
         <ArrowLeft size={18} /> Back
       </button>
 
-      <div className="glass-panel" style={{ padding: '40px' }}>
+      <div className="glass-panel form-panel">
         <h2 style={{ fontSize: '1.75rem', marginBottom: '6px' }}>Find Your Submission</h2>
         <p style={{ color: 'var(--slate-500)', marginBottom: '24px' }}>
           Enter the last name and phone number you used on your quote to look it up.
@@ -87,13 +74,13 @@ const CustomerLookup = () => {
           {results.length === 0 ? (
             <div className="glass-panel" style={{ padding: '28px', textAlign: 'center', color: 'var(--slate-500)' }}>
               No submission found for that last name and phone number. Double-check the spelling, or
-              {' '}<a href="#/" onClick={() => navigate('/')} style={{ color: 'var(--blue-700)', fontWeight: 600 }}>start a new quote</a>.
+              {' '}<Link to="/">start a new quote</Link>.
             </div>
           ) : (
             results.map((lead) => (
               <div key={lead.id} className="glass-panel" style={{ padding: '28px', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                  <h3 style={{ fontSize: '1.2rem' }}>{formatType(lead.type)}</h3>
+                  <h3 style={{ fontSize: '1.2rem' }}>{formatTypeLabel(lead.type)}</h3>
                   <span className={`status-badge status-${lead.status}`}>
                     {lead.status === 'complete' ? 'Received' : 'In progress'}
                   </span>
@@ -103,9 +90,15 @@ const CustomerLookup = () => {
                 </p>
 
                 <div className="lead-detail-grid" style={{ marginTop: '16px' }}>
-                  <div className="lead-detail-item"><label>Name</label><span>{fullName(lead.data)}</span></div>
+                  <div className="lead-detail-item"><label>Name</label><span>{leadFullName(lead.data)}</span></div>
                   {lead.data?.phone && <div className="lead-detail-item"><label>Phone</label><span>{lead.data.phone}</span></div>}
                   {lead.data?.email && <div className="lead-detail-item"><label>Email</label><span>{lead.data.email}</span></div>}
+                  {lead.data?.currentInsuranceCompany && (
+                    <div className="lead-detail-item"><label>Current Insurance</label><span>{lead.data.currentInsuranceCompany}</span></div>
+                  )}
+                  {formatPolicyDate(lead.data) && (
+                    <div className="lead-detail-item"><label>Policy Effective Date</label><span>{formatPolicyDate(lead.data)}</span></div>
+                  )}
                 </div>
 
                 {Array.isArray(lead.data?.vehicles) && lead.data.vehicles.length > 0 && (

@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { leadsApi } from '../api/client';
 import { downloadLeadsExcel } from '../utils/exportLeads';
+import { formatPolicyDate, leadFullName } from '../utils/format';
 
 const typeIcons = {
   auto: Car,
@@ -17,7 +18,10 @@ const typeIcons = {
   others: Shield,
 };
 
-const COMPLEX_KEYS = ['idPhoto', 'additionalDocument', 'documents', 'additionalPersons', 'vehicles'];
+const COMPLEX_KEYS = [
+  'idPhoto', 'additionalDocument', 'documents', 'additionalPersons', 'vehicles',
+  'policyEffectiveDateText',
+];
 
 const formatType = (type) => {
   if (type === 'others') return 'Other';
@@ -40,13 +44,15 @@ const Portal = () => {
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
   const [search, setSearch] = useState('');
+  const [fetchError, setFetchError] = useState('');
 
   const fetchLeads = useCallback(async () => {
     try {
       const data = await leadsApi.getAll();
       setLeads(data);
+      setFetchError('');
     } catch {
-      /* handled by auth */
+      setFetchError('Could not load leads. Try refreshing or signing in again.');
     } finally {
       setLoading(false);
     }
@@ -73,25 +79,18 @@ const Portal = () => {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this lead permanently?')) return;
-    await leadsApi.delete(id);
-    if (selected?.id === id) setSelected(null);
-  };
-
-  const handleDownloadExcel = () => {
-    if (filteredLeads.length === 0) {
-      alert('No leads to download.');
-      return;
+    try {
+      await leadsApi.delete(id);
+      if (selected?.id === id) setSelected(null);
+    } catch {
+      alert('Could not delete this lead. Please try again.');
     }
-    downloadLeadsExcel(filteredLeads);
   };
 
   const completeCount = leads.filter((l) => l.status === 'complete').length;
   const incompleteCount = leads.filter((l) => l.status === 'incomplete').length;
 
-  const getLeadName = (lead) => {
-    const d = lead.data || {};
-    return [d.firstName, d.lastName].filter(Boolean).join(' ') || d.name || '-';
-  };
+  const getLeadName = (lead) => leadFullName(lead.data || {});
   const getLeadContact = (lead) => lead.data?.phone || lead.data?.email || '-';
 
   const term = search.trim().toLowerCase();
@@ -105,6 +104,20 @@ const Portal = () => {
         return hay.includes(term);
       })
     : leads;
+
+  const handleDownloadExcel = () => {
+    if (filteredLeads.length === 0) {
+      alert('No leads to download.');
+      return;
+    }
+    if (search.trim() && filteredLeads.length < leads.length) {
+      const ok = confirm(
+        `You have a search filter active. Download ${filteredLeads.length} matching lead(s) instead of all ${leads.length}?`
+      );
+      if (!ok) return;
+    }
+    downloadLeadsExcel(filteredLeads);
+  };
 
   return (
     <div className="portal-layout">
@@ -124,7 +137,7 @@ const Portal = () => {
           </p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="portal-header-actions">
           <button className="btn btn-ghost btn-sm" onClick={handleDownloadExcel} style={{ color: 'var(--white)', borderColor: 'rgba(255,255,255,0.3)' }}>
             <Download size={14} /> Download Excel
           </button>
@@ -138,6 +151,9 @@ const Portal = () => {
       </header>
 
       <div className="portal-body fade-in-up">
+        {fetchError && (
+          <div className="portal-alert">{fetchError}</div>
+        )}
         <div className="portal-stats">
           <div className="glass-panel portal-stat total">
             <div className="num">{leads.length}</div>
@@ -259,10 +275,14 @@ const Portal = () => {
                 const label = key
                   .replace(/([A-Z])/g, ' $1')
                   .replace(/^./, (s) => s.toUpperCase());
+                const display =
+                  key === 'policyEffectiveDate'
+                    ? formatPolicyDate(selected.data)
+                    : value;
                 return (
                   <div key={key} className="lead-detail-item">
                     <label>{label}</label>
-                    <span>{value}</span>
+                    <span>{display}</span>
                   </div>
                 );
               })}
