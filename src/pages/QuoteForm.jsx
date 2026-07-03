@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle, Send, UserPlus, Car, X } from 'lucide-react';
 import { useLeadTracking } from '../hooks/useLeadTracking';
 import IdUpload from '../components/IdUpload';
 import MultiDocUpload from '../components/MultiDocUpload';
+import { INSURANCE_COMPANIES } from '../constants/insuranceCompanies';
 
 const formatTitle = (type) => {
   if (!type) return '';
@@ -11,6 +12,24 @@ const formatTitle = (type) => {
 };
 
 const emptyVehicle = () => ({ vin: '', vehicleStatus: 'Owned', financeCompany: '', lenderName: '' });
+
+const isoToDisplay = (iso) => {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  if (!y || !m || !d) return '';
+  return `${m}/${d}/${y}`;
+};
+
+const displayToIso = (text) => {
+  const match = text.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return '';
+  const [, month, day, year] = match;
+  const mm = month.padStart(2, '0');
+  const dd = day.padStart(2, '0');
+  const date = new Date(`${year}-${mm}-${dd}T12:00:00`);
+  if (Number.isNaN(date.getTime()) || date.getFullYear() !== Number(year)) return '';
+  return `${year}-${mm}-${dd}`;
+};
 
 const QuoteForm = () => {
   const { type } = useParams();
@@ -38,6 +57,9 @@ const QuoteForm = () => {
     lastName: '',
     phone: '',
     email: '',
+    currentInsuranceCompany: '',
+    policyEffectiveDate: '',
+    policyEffectiveDateText: '',
     idPhoto: '',
     additionalDocument: '',
     documents: [],
@@ -57,6 +79,25 @@ const QuoteForm = () => {
   };
 
   const setField = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
+
+  const handlePolicyDatePicker = (e) => {
+    const iso = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      policyEffectiveDate: iso,
+      policyEffectiveDateText: isoToDisplay(iso),
+    }));
+  };
+
+  const handlePolicyDateText = (e) => {
+    const text = e.target.value;
+    const iso = displayToIso(text);
+    setFormData((prev) => ({
+      ...prev,
+      policyEffectiveDateText: text,
+      policyEffectiveDate: iso || prev.policyEffectiveDate,
+    }));
+  };
 
   const addPerson = () => {
     setFormData((prev) => ({
@@ -186,6 +227,43 @@ const QuoteForm = () => {
               <div className="form-group">
                 <label className="form-label">Email Address *</label>
                 <input type="email" name="email" required className="form-control" value={formData.email} onChange={handleChange} placeholder="you@email.com" />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Current Insurance Company *</label>
+                <select
+                  name="currentInsuranceCompany"
+                  required
+                  className="form-control"
+                  value={formData.currentInsuranceCompany}
+                  onChange={handleChange}
+                >
+                  <option value="">Select current insurance company</option>
+                  {INSURANCE_COMPANIES.map((company) => (
+                    <option key={company} value={company}>{company}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">New Policy Effective Date</label>
+                <div className="date-dual-input">
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={formData.policyEffectiveDate}
+                    onChange={handlePolicyDatePicker}
+                    aria-label="Pick policy effective date"
+                  />
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.policyEffectiveDateText}
+                    onChange={handlePolicyDateText}
+                    placeholder="MM/DD/YYYY"
+                    aria-label="Enter policy effective date"
+                  />
+                </div>
               </div>
 
               <div className="form-group full-width">

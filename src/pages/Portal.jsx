@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LogOut, RefreshCw, Trash2, Eye, X, Radio, Search,
+  LogOut, RefreshCw, Trash2, Eye, X, Radio, Search, Download,
   Car, Home, Building2, Shield, Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsApi } from '../api/client';
+import { downloadLeadsExcel } from '../utils/exportLeads';
 
 const typeIcons = {
   auto: Car,
@@ -76,6 +77,14 @@ const Portal = () => {
     if (selected?.id === id) setSelected(null);
   };
 
+  const handleDownloadExcel = () => {
+    if (filteredLeads.length === 0) {
+      alert('No leads to download.');
+      return;
+    }
+    downloadLeadsExcel(filteredLeads);
+  };
+
   const completeCount = leads.filter((l) => l.status === 'complete').length;
   const incompleteCount = leads.filter((l) => l.status === 'incomplete').length;
 
@@ -89,7 +98,7 @@ const Portal = () => {
   const filteredLeads = term
     ? leads.filter((l) => {
         const d = l.data || {};
-        const hay = [d.firstName, d.lastName, d.name, d.phone, d.email, l.type]
+        const hay = [d.firstName, d.lastName, d.name, d.phone, d.email, d.currentInsuranceCompany, l.type]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
@@ -116,6 +125,9 @@ const Portal = () => {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
+          <button className="btn btn-ghost btn-sm" onClick={handleDownloadExcel} style={{ color: 'var(--white)', borderColor: 'rgba(255,255,255,0.3)' }}>
+            <Download size={14} /> Download Excel
+          </button>
           <button className="btn btn-ghost btn-sm" onClick={fetchLeads} style={{ color: 'var(--white)', borderColor: 'rgba(255,255,255,0.3)' }}>
             <RefreshCw size={14} /> Refresh
           </button>
