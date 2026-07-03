@@ -51,6 +51,13 @@ export const leadsApi = {
     return data || [];
   },
 
+  // Portal-only: approximate lead data size + daily counts (authenticated users).
+  getUsageStats: async () => {
+    const { data, error } = await supabase.rpc('get_portal_usage_stats');
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
   // Live updates: calls onChange whenever any lead is inserted/updated/deleted.
   // Returns an unsubscribe function.
   subscribe: (onChange) => {

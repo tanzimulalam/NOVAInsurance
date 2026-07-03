@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { leadsApi } from '../api/client';
 import { downloadLeadsExcel } from '../utils/exportLeads';
 import { formatPolicyDate, leadFullName } from '../utils/format';
+import UsagePanel from '../components/UsagePanel';
 
 const typeIcons = {
   auto: Car,
@@ -45,6 +46,27 @@ const Portal = () => {
   const [connected, setConnected] = useState(false);
   const [search, setSearch] = useState('');
   const [fetchError, setFetchError] = useState('');
+  const [usageStats, setUsageStats] = useState(null);
+  const [usageLoading, setUsageLoading] = useState(true);
+  const [usageError, setUsageError] = useState('');
+
+  const fetchUsage = useCallback(async () => {
+    try {
+      const data = await leadsApi.getUsageStats();
+      setUsageStats(data);
+      setUsageError('');
+    } catch (err) {
+      setUsageStats(null);
+      const msg = err.message || '';
+      setUsageError(
+        msg.includes('get_portal_usage_stats')
+          ? 'Run the usage-stats SQL in Supabase (see SUPABASE_SETUP.md in the project).'
+          : 'Could not load the usage estimate right now.'
+      );
+    } finally {
+      setUsageLoading(false);
+    }
+  }, []);
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -60,17 +82,19 @@ const Portal = () => {
 
   useEffect(() => {
     fetchLeads();
+    fetchUsage();
 
     const unsubscribe = leadsApi.subscribe(() => {
       setConnected(true);
       fetchLeads();
+      fetchUsage();
     });
     setConnected(true);
 
     return () => {
       unsubscribe();
     };
-  }, [fetchLeads]);
+  }, [fetchLeads, fetchUsage]);
 
   const handleLogout = async () => {
     await logout();
@@ -141,7 +165,7 @@ const Portal = () => {
           <button className="btn btn-ghost btn-sm" onClick={handleDownloadExcel} style={{ color: 'var(--white)', borderColor: 'rgba(255,255,255,0.3)' }}>
             <Download size={14} /> Download Excel
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={fetchLeads} style={{ color: 'var(--white)', borderColor: 'rgba(255,255,255,0.3)' }}>
+          <button className="btn btn-ghost btn-sm" onClick={() => { fetchLeads(); fetchUsage(); }} style={{ color: 'var(--white)', borderColor: 'rgba(255,255,255,0.3)' }}>
             <RefreshCw size={14} /> Refresh
           </button>
           <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ color: 'var(--white)', borderColor: 'rgba(255,255,255,0.3)' }}>
@@ -168,6 +192,8 @@ const Portal = () => {
             <div style={{ color: 'var(--slate-500)', fontSize: '0.9rem' }}>Incomplete</div>
           </div>
         </div>
+
+        <UsagePanel stats={usageStats} loading={usageLoading} error={usageError} />
 
         <div className="portal-search">
           <Search size={16} color="var(--slate-500)" />

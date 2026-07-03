@@ -1181,6 +1181,183 @@ select.form-control {
   border: 1px solid #fecaca;
 }
 
+/* ── Portal usage estimate panel ── */
+.usage-panel {
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.usage-panel-error {
+  border-color: #fecaca;
+  background: #fffbeb;
+}
+
+.usage-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.usage-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+
+.usage-panel-sub {
+  color: var(--slate-500);
+  font-size: 0.9rem;
+  max-width: 520px;
+}
+
+.usage-panel-stat {
+  text-align: right;
+}
+
+.usage-panel-stat-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--blue-700);
+  line-height: 1.1;
+}
+
+.usage-panel-stat-label {
+  font-size: 0.8rem;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.usage-meter-wrap {
+  margin-bottom: 24px;
+}
+
+.usage-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--slate-500);
+  margin-bottom: 8px;
+}
+
+.usage-meter {
+  height: 12px;
+  background: var(--slate-100);
+  border-radius: 100px;
+  overflow: hidden;
+  border: 1px solid var(--slate-200);
+}
+
+.usage-meter-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.6s ease;
+}
+
+.usage-meter-ok {
+  background: linear-gradient(90deg, var(--green-500), var(--blue-500));
+}
+
+.usage-meter-warning {
+  background: linear-gradient(90deg, #f59e0b, #ea580c);
+}
+
+.usage-meter-critical {
+  background: linear-gradient(90deg, #ef4444, #b91c1c);
+}
+
+.usage-meter-caption {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--slate-500);
+}
+
+.usage-chart-section h4 {
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+  color: var(--blue-900);
+}
+
+.usage-chart {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 150px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.usage-bar-col {
+  flex: 1;
+  min-width: 26px;
+  max-width: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.usage-bar-value {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--blue-700);
+  min-height: 14px;
+  margin-bottom: 2px;
+}
+
+.usage-bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--blue-50);
+  border-radius: 6px 6px 2px 2px;
+  min-height: 80px;
+}
+
+.usage-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--blue-500), var(--blue-700));
+  border-radius: 6px 6px 2px 2px;
+  min-height: 2px;
+  transition: height 0.4s ease;
+}
+
+.usage-bar-day {
+  font-size: 0.6rem;
+  color: var(--slate-500);
+  margin-top: 4px;
+  text-align: center;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.usage-disclaimer {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--slate-700);
+  line-height: 1.5;
+}
+
+.usage-disclaimer svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--blue-700);
+}
+
 /* ── Footer ── */
 .site-footer {
   margin: 40px 24px 20px;

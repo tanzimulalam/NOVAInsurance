@@ -168,6 +168,46 @@ grant execute on function public.search_my_leads(text, text) to anon, authentica
 It only returns rows where BOTH the last name and the phone digits match what
 the customer typed, so it can't be used to browse other people's submissions.
 
+## Portal usage estimate (required for the usage graph in Management Portal)
+
+Shows an **approximate** lead-data size and a 30-day lead chart. This is **not**
+official Supabase quota data — only a rough estimate of your `leads` table.
+
+Run this once in `SQL Editor`:
+
+```sql
+create or replace function public.get_portal_usage_stats()
+returns json
+language sql
+security definer
+set search_path = public
+as $$
+  select json_build_object(
+    'total_leads', (select count(*)::bigint from public.leads),
+    'estimated_bytes', (
+      select coalesce(sum(octet_length(data::text)), 0)::bigint
+      from public.leads
+    ),
+    'daily_counts', (
+      select coalesce(
+        json_agg(json_build_object('day', day, 'count', cnt) order by day),
+        '[]'::json
+      )
+      from (
+        select created_at::date as day, count(*)::int as cnt
+        from public.leads
+        where created_at >= now() - interval '30 days'
+        group by 1
+      ) daily
+    )
+  );
+$$;
+
+grant execute on function public.get_portal_usage_stats() to authenticated;
+```
+
+Only logged-in portal users can call this function.
+
 ## Notes
 
 - The old `server/` folder and `server/data/leads.json` are no longer used and
