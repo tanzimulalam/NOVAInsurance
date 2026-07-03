@@ -1,8 +1,9 @@
 export const VALID_QUOTE_TYPES = ['auto', 'home', 'renters', 'commercial', 'cyber', 'others'];
 
 export const formatPolicyDate = (data = {}) => {
-  if (data.policyEffectiveDateText) return data.policyEffectiveDateText;
-  if (!data.policyEffectiveDate) return '';
+  if (!data.policyEffectiveDate) {
+    return data.policyEffectiveDateText || '';
+  }
   const [y, m, d] = data.policyEffectiveDate.split('-');
   if (!y || !m || !d) return data.policyEffectiveDate;
   return `${m}/${d}/${y}`;
@@ -46,9 +47,5 @@ export const leadFullName = (data = {}) =>
 
 export const prepareSubmitData = (formData) => {
   const { policyEffectiveDateText, ...rest } = formData;
-  let policyEffectiveDate = rest.policyEffectiveDate;
-  if (!policyEffectiveDate && policyEffectiveDateText?.trim()) {
-    policyEffectiveDate = displayToIso(policyEffectiveDateText);
-  }
-  return { ...rest, policyEffectiveDate: policyEffectiveDate || '' };
+  return { ...rest, policyEffectiveDate: rest.policyEffectiveDate || '' };
 };

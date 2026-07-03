@@ -842,19 +842,6 @@ select.form-control {
   box-shadow: none;
 }
 
-/* ── Dual date input (calendar + text) ── */
-.date-dual-input {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-@media (max-width: 600px) {
-  .date-dual-input {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Progress bar */
 .progress-bar {
   height: 6px;

@@ -7,8 +7,6 @@ import MultiDocUpload from '../components/MultiDocUpload';
 import { INSURANCE_COMPANIES } from '../constants/insuranceCompanies';
 import {
   VALID_QUOTE_TYPES,
-  displayToIso,
-  isoToDisplay,
   prepareSubmitData,
 } from '../utils/format';
 
@@ -47,7 +45,6 @@ const QuoteForm = () => {
     email: '',
     currentInsuranceCompany: '',
     policyEffectiveDate: '',
-    policyEffectiveDateText: '',
     idPhoto: '',
     additionalDocument: '',
     documents: [],
@@ -74,26 +71,7 @@ const QuoteForm = () => {
   const setField = (field, value) => setFormData((prev) => ({ ...prev, [field]: value }));
 
   const handlePolicyDatePicker = (e) => {
-    const iso = e.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      policyEffectiveDate: iso,
-      policyEffectiveDateText: isoToDisplay(iso),
-    }));
-  };
-
-  const handlePolicyDateText = (e) => {
-    const text = e.target.value;
-    if (!text.trim()) {
-      setFormData((prev) => ({ ...prev, policyEffectiveDateText: '', policyEffectiveDate: '' }));
-      return;
-    }
-    const iso = displayToIso(text);
-    setFormData((prev) => ({
-      ...prev,
-      policyEffectiveDateText: text,
-      policyEffectiveDate: iso || '',
-    }));
+    setField('policyEffectiveDate', e.target.value);
   };
 
   const addPerson = () => {
@@ -145,13 +123,6 @@ const QuoteForm = () => {
       return;
     }
 
-    if (
-      formData.policyEffectiveDateText.trim() &&
-      !formData.policyEffectiveDate
-    ) {
-      setError('Please enter a valid policy effective date (MM/DD/YYYY).');
-      return;
-    }
     setError('');
 
     if (step < totalSteps) {
@@ -253,24 +224,12 @@ const QuoteForm = () => {
 
               <div className="form-group full-width">
                 <label className="form-label">New Policy Effective Date</label>
-                <div className="date-dual-input">
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.policyEffectiveDate}
-                    onChange={handlePolicyDatePicker}
-                    aria-label="Pick policy effective date"
-                  />
-                  <input
-                    type="text"
-                    className={`form-control${formData.policyEffectiveDateText.trim() && !formData.policyEffectiveDate ? ' input-invalid' : ''}`}
-                    value={formData.policyEffectiveDateText}
-                    onChange={handlePolicyDateText}
-                    placeholder="MM/DD/YYYY"
-                    aria-label="Enter policy effective date"
-                  />
-                </div>
-                <p className="form-hint">Use the calendar or type the date as MM/DD/YYYY.</p>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={formData.policyEffectiveDate}
+                  onChange={handlePolicyDatePicker}
+                />
               </div>
 
               <div className="form-group full-width">

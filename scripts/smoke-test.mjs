@@ -19,7 +19,7 @@ check('displayToIso valid date', displayToIso('07/03/2026') === '2026-07-03');
 check('displayToIso rejects invalid', displayToIso('02/29/2023') === '');
 check('isoToDisplay roundtrip', isoToDisplay('2026-07-03') === '07/03/2026');
 check('prepareSubmitData strips text field', !('policyEffectiveDateText' in prepareSubmitData({
-  firstName: 'A', policyEffectiveDate: '2026-07-03', policyEffectiveDateText: '07/03/2026',
+  firstName: 'A', policyEffectiveDate: '2026-07-03',
 })));
 
 const url = get('VITE_SUPABASE_URL');
@@ -34,7 +34,6 @@ if (url && key) {
     email: 'smoke@test.com',
     currentInsuranceCompany: 'GEICO',
     policyEffectiveDate: '2026-08-01',
-    policyEffectiveDateText: '08/01/2026',
   });
   const { error } = await supabase.from('leads').insert({
     id, type: 'cyber', status: 'complete', data: payload,
