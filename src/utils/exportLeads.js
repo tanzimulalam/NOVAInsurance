@@ -18,7 +18,7 @@ const summarizeVehicles = (vehicles) => {
       const parts = [`Vehicle ${i + 1}`];
       if (v.vin) parts.push(`VIN: ${v.vin}`);
       if (v.vehicleStatus) parts.push(v.vehicleStatus);
-      return parts.join(' — ');
+      return parts.join(' | ');
     })
     .join('; ');
 };

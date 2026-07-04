@@ -81,7 +81,7 @@ You should see `Success. No rows returned`.
    - **Project URL** (looks like `https://abcd1234.supabase.co`)
    - **anon public** key (a long string under "Project API keys")
 
-> The anon key is safe to put in the website — your data is protected by the
+> The anon key is safe to put in the website. Your data is protected by the
 > Row Level Security rules above.
 
 ---
@@ -116,7 +116,7 @@ You should see `Success. No rows returned`.
 
 1. In a terminal: `npm install` (first time only), then `npm run dev`.
 2. Open the local URL it prints (usually `http://localhost:5173`).
-3. Fill out a quote form as a customer — it saves to Supabase.
+3. Fill out a quote form as a customer. It saves to Supabase.
 4. Click `Agent Login` in the header, sign in with the email/password from step 5.
 5. You should see the lead appear in the portal in real time.
 
@@ -171,7 +171,7 @@ the customer typed, so it can't be used to browse other people's submissions.
 ## Portal usage estimate (required for the usage graph in Management Portal)
 
 Shows an **approximate** lead-data size and a 30-day lead chart. This is **not**
-official Supabase quota data — only a rough estimate of your `leads` table.
+official Supabase quota data. It is only a rough estimate of your `leads` table.
 
 Run this once in `SQL Editor`:
 
@@ -214,4 +214,4 @@ Only logged-in portal users can call this function.
   can be deleted whenever you like.
 - ID photos are stored inside each lead's `data` (as compressed images). If you
   later expect a lot of large photos, we can switch to Supabase **Storage** for
-  cheaper/faster image handling — ask when you're ready.
+  cheaper/faster image handling. Ask when you are ready.

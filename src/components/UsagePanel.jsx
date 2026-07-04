@@ -2,7 +2,7 @@ import React from 'react';
 import { Database, Info } from 'lucide-react';
 
 // Free-tier database limit is often cited as ~500 MB per project; used only as a
-// rough visual reference — not an official Supabase API reading.
+// rough visual reference, not an official Supabase API reading.
 const REFERENCE_LIMIT_MB = 500;
 
 const formatBytes = (bytes) => {
@@ -64,7 +64,7 @@ const UsagePanel = ({ stats, loading, error }) => {
             <Database size={20} /> Estimated data usage
           </h3>
           <p className="usage-panel-sub">
-            Approximate size of lead records in your database — not official Supabase billing data.
+            Approximate size of lead records in your database, not official Supabase billing data.
           </p>
         </div>
         <div className="usage-panel-stat">
@@ -83,12 +83,12 @@ const UsagePanel = ({ stats, loading, error }) => {
         </div>
         <p className="usage-meter-caption">
           ~{estimatedMb.toFixed(2)} MB of lead data vs. a rough {REFERENCE_LIMIT_MB} MB project reference line
-          {refPercent >= 65 && ' — consider reviewing old leads or checking the Supabase Dashboard.'}
+          {refPercent >= 65 && '. Consider reviewing old leads or checking the Supabase Dashboard.'}
         </p>
       </div>
 
       <div className="usage-chart-section">
-        <h4>Leads submitted — last 30 days</h4>
+        <h4>Leads submitted (last 30 days)</h4>
         <div className="usage-chart" role="img" aria-label="Bar chart of leads submitted per day for the last 30 days">
           {daily.map(({ day, count }) => (
             <div key={day} className="usage-bar-col" title={`${formatShortDay(day)}: ${count} lead(s)`}>
@@ -105,7 +105,7 @@ const UsagePanel = ({ stats, loading, error }) => {
       <div className="usage-disclaimer">
         <Info size={16} />
         <p>
-          <strong>Estimate only — not 100% accurate.</strong> This counts probable lead form data
+          <strong>Estimate only, not 100% accurate.</strong> This counts probable lead form data
           (including ID photos stored as text). It does <em>not</em> include Supabase system overhead,
           indexes, auth tables, or other services. Official quota and storage numbers are in the
           Supabase Dashboard under <strong>Project Settings → Usage</strong>.
